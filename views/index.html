@@ -1,0 +1,146 @@
+{{ block "index" . }}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title></title>
+    <link href="css/index.css" rel="stylesheet" />
+    <script
+      src="https://unpkg.com/htmx.org@1.9.12"
+      integrity="sha384-ujb1lZYygJmzgSwoxRggbCHcjc0rB2XoQrxeTUQyRjrOnlCoYta87iKBWq3EsdM2"
+      crossorigin="anonymous"
+    ></script>
+  </head>
+  <body>
+    {{template "form" .Form }}
+    <hr />
+    {{template "display" .Data }}
+
+    <script>
+      document.addEventListener("DOMContentLoaded", (event) => {
+        document.addEventListener("htmx:beforeSwap", function (evt) {
+          if (evt.detail.xhr.status === 422) {
+            evt.detail.shouldSwap = true;
+            evt.detail.isError = false;
+          }
+        });
+      });
+    </script>
+  </body>
+</html>
+{{ end }} {{ block "form" . }}
+<form hx-swap="outerHTML" hx-post="/contacts">
+  <label for="name">Name</label>
+  <input
+    {{
+    if
+    .Values.name
+    }}
+    value="{{ .Values.name }}"
+    {{
+    end
+    }}
+    type="text"
+    name="name"
+    placeholder="Name"
+  />
+
+  <label for="email">Email</label>
+  <input
+    {{
+    if
+    .Values.email
+    }}
+    value="{{ .Values.email }}"
+    {{
+    end
+    }}
+    type="email"
+    name="email"
+    placeholder="Email"
+  />
+
+  {{ if .Errors.email }}
+  <div style="color: plum">{{ .Errors.email }}</div>
+  {{ end }}
+  <button type="submit">Submit</button>
+</form>
+{{ end }} {{ block "display" . }}
+<div id="contacts" style="display: flex; flex-direction: column">
+  {{ range .Contacts }} {{ template "contact" . }} {{ end }}
+</div>
+{{ end }} {{ block "contact" . }}
+<div class="contact" id="contact-{{ .Id }}" style="display: flex">
+  <div
+    hx-indicator="#ci-{{ .Id }}"
+    hx-swap="outerHTML swap:500ms"
+    hx-target="#contact-{{ .Id }}"
+    hx-delete="/contacts/{{ .Id }}"
+    style="width: 1rem; cursor: pointer"
+  >
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+      <rect width="256" height="256" fill="none" />
+      <line
+        x1="216"
+        y1="60"
+        x2="40"
+        y2="60"
+        fill="none"
+        stroke="#000"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="24"
+      />
+      <line
+        x1="104"
+        y1="104"
+        x2="104"
+        y2="168"
+        fill="none"
+        stroke="#000"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="24"
+      />
+      <line
+        x1="152"
+        y1="104"
+        x2="152"
+        y2="168"
+        fill="none"
+        stroke="#000"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="24"
+      />
+      <path
+        d="M200,60V208a8,8,0,0,1-8,8H64a8,8,0,0,1-8-8V60"
+        fill="none"
+        stroke="#000"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="24"
+      />
+      <path
+        d="M168,60V36a16,16,0,0,0-16-16H104A16,16,0,0,0,88,36V60"
+        fill="none"
+        stroke="#000"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="24"
+      />
+    </svg>
+  </div>
+  Name:
+  <span>{{ .Name }}</span>
+  Email:
+  <span>{{ .Email }}</span>
+
+  <div id="ci-{{ .Id }}" class="htmx-indicator">
+    <img src="/images/bars.svg" alt="loading" style="width: 1rem" />
+  </div>
+</div>
+{{ end }} {{ block "oob-contact" . }}
+<div id="contacts" hx-swap-oob="afterbegin">{{ template "contact" . }}</div>
+{{ end }}
